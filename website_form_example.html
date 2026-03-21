@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Locksmith Lead Form (Demo)</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;}
+    label{display:block;margin:12px 0 6px;}
+    input,select,textarea{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px;}
+    button{margin-top:16px;padding:12px 16px;border-radius:10px;border:0;background:#111;color:#fff;cursor:pointer;}
+    .row{display:flex;gap:12px;}
+    .row > div{flex:1;}
+  </style>
+</head>
+<body>
+<h1>Locksmith Booking</h1>
+<p>Point <code>API_URL</code> to your ngrok URL ending with <code>/qualify-lead</code> and submit.</p>
+
+<form id="f">
+  <label>Name</label><input id="name" required>
+  <label>Phone</label><input id="phone" required>
+  <label>Address</label><input id="addr">
+  <label>Suburb</label><input id="suburb">
+  <label>Job Type</label>
+  <select id="job">
+    <option>Residential lockout</option>
+    <option>Commercial lockout</option>
+    <option>Car lockout</option>
+    <option>Rekey</option>
+    <option>Lock replacement</option>
+    <option>Broken key extraction</option>
+    <option>Smart lock issue</option>
+    <option>Roller door jam</option>
+  </select>
+  <div class="row">
+    <div>
+      <label>Vehicle Make (if car lockout)</label><input id="make">
+    </div>
+    <div>
+      <label>Vehicle Model</label><input id="model">
+    </div>
+  </div>
+  <label>Time Target</label>
+  <select id="timeT">
+    <option>Now</option>
+    <option>60–120 minutes</option>
+    <option>Today</option>
+    <option>Later</option>
+  </select>
+  <div class="row">
+    <div><label><input type="checkbox" id="child"> Child inside</label></div>
+    <div><label><input type="checkbox" id="pet"> Pet inside</label></div>
+  </div>
+  <label>Notes</label><textarea id="notes" rows="4"></textarea>
+  <label>Photo URL (optional)</label><input id="photo">
+  <button type="submit">Send</button>
+</form>
+
+<pre id="out"></pre>
+
+<script>
+const API_URL = "https://e72bea93b490.ngrok-free.app/qualify-lead"; // change me
+
+document.getElementById('f').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = v('name'), phone = v('phone'), addr = v('addr'), suburb = v('suburb');
+  const job = v('job'), timeT = v('timeT'), make = v('make'), model = v('model');
+  const child = document.getElementById('child').checked;
+  const pet = document.getElementById('pet').checked;
+  const notes = v('notes'), photo = v('photo');
+
+  const composed = [
+    job, addr || suburb, `Time: ${timeT}`,
+    child ? "Child inside" : "", pet ? "Pet inside" : "", notes
+  ].filter(Boolean).join(". ");
+
+  const payload = {
+    message: composed,
+    contact: { name, phone },
+    meta: {
+      address: addr, suburb,
+      job_type: job, time_target: timeT,
+      child_inside: child, pet_inside: pet,
+      vehicle: { make, model },
+      photo_url: photo
+    },
+    source: "website_demo"
+  };
+
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+  const text = await res.text();
+  document.getElementById('out').textContent = `Status ${res.status}\n\n${text}`;
+});
+
+function v(id){ return document.getElementById(id).value.trim(); }
+</script>
+</body>
+</html>

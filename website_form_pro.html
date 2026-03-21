@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lead Form (Pro – Drop-in, No Backend Change)</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+    body { max-width: 760px; margin: 24px auto; padding: 0 16px; }
+    h1 { font-size: 1.4rem; margin-bottom: 0.6rem; }
+    p.hint { color: #555; margin-top: 0; }
+    form { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row-4 { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; }
+    label { display: block; font-size: 0.95rem; margin: 8px 0 4px; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="time"], select, textarea {
+      width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; font-size: 0.95rem; background:#fff;
+    }
+    textarea { min-height: 100px; }
+    .muted { color:#6b7280; font-size: 0.85rem; }
+    .actions { display:flex; gap:12px; margin-top: 14px; align-items:center; }
+    button {
+      padding: 10px 14px; border: none; border-radius: 10px; background: #2563eb; color: white; font-size: 1rem; cursor: pointer;
+    }
+    button:disabled { background: #93c5fd; cursor: not-allowed; }
+    .hidden { display:none; }
+    .success { color:#065f46; }
+    .error { color:#991b1b; }
+    .inline { display:inline; }
+  </style>
+</head>
+<body>
+  <h1>Request a Locksmith</h1>
+  <p class="hint">Drop‑in form: posts the same JSON your API expects (<code>name</code>, <code>mobile</code>, <code>email</code>, <code>message</code>, <code>source</code>). Extra inputs are merged into <code>message</code> so the backend needs no changes.</p>
+
+  <form id="leadForm">
+    <input type="hidden" id="source" value="Locksmith Website">
+
+    <div class="row">
+      <div>
+        <label for="name">Name *</label>
+        <input id="name" type="text" placeholder="Full name" required>
+      </div>
+      <div>
+        <label for="mobile">Mobile *</label>
+        <input id="mobile" type="tel" placeholder="+61..." required>
+      </div>
+    </div>
+
+    <div>
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="name@example.com">
+    </div>
+
+    <div class="row-4">
+      <div>
+        <label for="street">Street address</label>
+        <input id="street" type="text" placeholder="23 Example Street">
+      </div>
+      <div>
+        <label for="suburb">Suburb</label>
+        <input id="suburb" type="text" placeholder="Parramatta">
+      </div>
+      <div>
+        <label for="state">State</label>
+        <select id="state">
+          <option value="">State</option>
+          <option>NSW</option><option>VIC</option><option>QLD</option><option>SA</option>
+          <option>WA</option><option>TAS</option><option>ACT</option><option>NT</option>
+        </select>
+      </div>
+      <div>
+        <label for="postcode">Postcode</label>
+        <input id="postcode" type="text" inputmode="numeric" pattern="[0-9]{4}" placeholder="2000" title="4 digits">
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="jobType">Job type</label>
+        <select id="jobType">
+          <option>Residential lockout</option>
+          <option>Commercial lockout</option>
+          <option>Car lockout</option>
+          <option>Rekey</option>
+          <option>Lock replacement</option>
+          <option>Broken key extraction</option>
+          <option>Smart lock issue</option>
+          <option>Roller door jam</option>
+          <option>Other (please specify)</option>
+        </select>
+      </div>
+      <div id="jobOtherWrap" class="hidden">
+        <label for="jobOther">Please describe</label>
+        <input id="jobOther" type="text" placeholder="e.g., deadbolt jammed">
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label>Urgency</label>
+        <div>
+          <label class="inline"><input type="radio" name="urgency" value="Emergency" checked> Emergency</label>
+          <label class="inline"><input type="radio" name="urgency" value="Same-day"> Same-day</label>
+          <label class="inline"><input type="radio" name="urgency" value="Non-urgent"> Non-urgent</label>
+        </div>
+      </div>
+      <div>
+        <label for="timeTarget">Time target</label>
+        <select id="timeTarget">
+          <option>Now</option>
+          <option>60–120 minutes</option>
+          <option>Today</option>
+          <option>Later</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="laterWrap" class="hidden">
+      <label for="laterTime">Preferred time (if Later)</label>
+      <input id="laterTime" type="time">
+    </div>
+
+    <div>
+      <label>Access context</label>
+      <div>
+        <label class="inline"><input type="checkbox" id="childInside"> Child locked inside</label>
+        <label class="inline" style="margin-left:12px;"><input type="checkbox" id="petInside"> Pet locked inside</label>
+      </div>
+    </div>
+
+    <div>
+      <label for="notes">Notes / Problem description</label>
+      <textarea id="notes" placeholder="Briefly describe the issue"></textarea>
+    </div>
+
+    <div class="actions">
+      <button id="submitBtn" type="submit">Send</button>
+      <span id="status" class="muted"></span>
+    </div>
+  </form>
+
+  <script>
+    // ---- Configuration ----
+    // Change this to your ngrok or production URL if needed:
+    const API_URL = "https://a070-2001-4479-3701-d500-84b0-eced-335b-2330.ngrok-free.app/qualify-lead";
+
+    // ---- UX toggles ----
+    const jobType = document.getElementById('jobType');
+    const jobOtherWrap = document.getElementById('jobOtherWrap');
+    const laterWrap = document.getElementById('laterWrap');
+    const timeTarget = document.getElementById('timeTarget');
+    jobType.addEventListener('change', () => {
+      jobOtherWrap.classList.toggle('hidden', jobType.value !== 'Other (please specify)');
+    });
+    timeTarget.addEventListener('change', () => {
+      laterWrap.classList.toggle('hidden', timeTarget.value !== 'Later');
+    });
+
+    // ---- Submit handler (no backend change) ----
+    const form = document.getElementById('leadForm');
+    const statusEl = document.getElementById('status');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      statusEl.textContent = 'Sending...';
+      submitBtn.disabled = true;
+
+      const name = document.getElementById('name').value.trim();
+      const mobile = document.getElementById('mobile').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const street = document.getElementById('street').value.trim();
+      const suburb = document.getElementById('suburb').value.trim();
+      const state = document.getElementById('state').value.trim();
+      const postcode = document.getElementById('postcode').value.trim();
+      const jt = jobType.value;
+      const jobOther = (document.getElementById('jobOther').value || '').trim();
+      const urgency = (document.querySelector('input[name="urgency"]:checked') || {}).value || 'Emergency';
+      const tt = timeTarget.value;
+      const laterTime = document.getElementById('laterTime').value;
+      const notes = document.getElementById('notes').value.trim();
+      const childInside = document.getElementById('childInside').checked;
+      const petInside = document.getElementById('petInside').checked;
+      const source = document.getElementById('source').value;
+
+      const fullAddress = [street, suburb, state, postcode].filter(Boolean).join(', ');
+      const timeStr = (tt === 'Later' && laterTime) ? `Later (${laterTime})` : tt;
+      const jobLabel = (jt === 'Other (please specify)' && jobOther) ? `Other — ${jobOther}` : jt;
+
+      // Safety line
+      const safetyBits = [];
+      if (childInside) safetyBits.push('Child inside');
+      if (petInside) safetyBits.push('Pet inside');
+      const safetyLine = safetyBits.length ? `Safety: ${safetyBits.join(' & ')}` : null;
+
+      const composedMessage = [
+        `${jobLabel} — ${fullAddress || 'N/A'} (${timeStr})`,
+        `Urgency: ${urgency}`,
+        safetyLine,
+        notes ? `Notes: ${notes}` : null
+      ].filter(Boolean).join('\\n');
+
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json' ,
+            'X-API-Key': '7f9a3c2e9d8b4f6a1c3e5d7b9a0f2c4d'
+          }, 
+          body: JSON.stringify({ name, mobile, email, message: composedMessage, source })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        await res.json();
+        statusEl.textContent = 'Sent ✓';
+        statusEl.className = 'success';
+        form.reset();
+        jobOtherWrap.classList.add('hidden');
+        laterWrap.classList.add('hidden');
+      } catch (err) {
+        statusEl.textContent = 'Failed to send. Please retry.';
+        statusEl.className = 'error';
+        console.error(err);
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
