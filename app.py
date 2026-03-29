@@ -152,9 +152,21 @@ def decide_should_sms(result: dict, lead_quality: str) -> bool:
     return False
 
 def send_sms(to: str, body: str):
+    print(f"SEND_SMS check | ENABLE_SMS={ENABLE_SMS} | has_twilio={bool(_twilio)} | TWILIO_FROM={bool(TWILIO_FROM)} | to={to}")
+
     if not (_twilio and TWILIO_FROM and to):
+        print("SEND_SMS skip: missing _twilio or TWILIO_FROM or destination")
         return
-    _twilio.messages.create(to=to, from_=TWILIO_FROM, body=body[:1000])
+
+    try:
+        msg = _twilio.messages.create(
+            to=to,
+            from_=TWILIO_FROM,
+            body=body[:1000]
+        )
+        print(f"SEND_SMS success: sid={msg.sid}")
+    except Exception as e:
+        print(f"SEND_SMS error: {e}")
 
 def make_prompt_locksmith(message: str) -> str:
     return f"""
@@ -299,7 +311,10 @@ def send_slack_card(result: dict, name: str, mobile: str, email_addr: str, sourc
         print("SLACK error:", e)
 
 def send_customer_sms(to_number, is_emergency=False):
+    print(f"CUSTOMER_SMS check | AUTO_REPLY_SMS_ENABLED={AUTO_REPLY_SMS_ENABLED} | has_twilio={bool(_twilio)} | TWILIO_FROM={bool(TWILIO_FROM)} | to={to_number}")
+
     if not AUTO_REPLY_SMS_ENABLED or not to_number or not _twilio or not TWILIO_FROM:
+        print("CUSTOMER_SMS skip: disabled or missing destination/_twilio/TWILIO_FROM")
         return False
 
     business = BUSINESS_NAME.strip() or "Your Locksmith"
@@ -314,14 +329,15 @@ def send_customer_sms(to_number, is_emergency=False):
         body += f" If urgent, call {callback}."
 
     try:
-        _twilio.messages.create(
+        msg = _twilio.messages.create(
             from_=TWILIO_FROM,
             to=to_number,
             body=body
         )
+        print(f"CUSTOMER_SMS success: sid={msg.sid}")
         return True
     except Exception as e:
-        print(f"Customer SMS failed: {e}")
+        print(f"CUSTOMER_SMS error: {e}")
         return False        
 
 def send_customer_email(to_email):
