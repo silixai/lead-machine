@@ -350,8 +350,8 @@ def send_customer_email(to_email):
         f"Hi,\n\n"
         f"We received your request and will contact you shortly.\n\n"
         f"This is a demo of how your business can automatically capture and respond to leads in real-time.\n\n"
-        f"If this is urgent, you can call us directly at {CALLBACK_NUMBER}.\n\n"
-        f"\n— {BUSINESS_NAME}"
+        f"If you'd like to see how this system can be set up for your business, call {CALLBACK_NUMBER}.\n\n"
+        f"— {BUSINESS_NAME}"
     )
 
     try:
