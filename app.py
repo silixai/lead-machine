@@ -348,9 +348,10 @@ def send_customer_email(to_email):
 
     body = (
         f"Hi,\n\n"
-        f"We received your locksmith request and will contact you shortly.\n\n"
+        f"We received your request and will contact you shortly.\n\n"
+        f"This is a demo of how your business can automatically capture and respond to leads in real-time.\n\n"
         f"If this is urgent, you can call us directly at {CALLBACK_NUMBER}.\n\n"
-        f"— {BUSINESS_NAME}"
+        f"\n— {BUSINESS_NAME}"
     )
 
     try:
