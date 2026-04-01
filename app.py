@@ -38,6 +38,8 @@ AUTO_REPLY_EMAIL_ENABLED = os.getenv("AUTO_REPLY_EMAIL_ENABLED", "true").lower()
 BUSINESS_NAME = os.getenv("BUSINESS_NAME", "Your Locksmith")
 CALLBACK_NUMBER = os.getenv("CALLBACK_NUMBER", "")
 
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
+
 FOLLOWUP_REMINDER_ENABLED = os.getenv("FOLLOWUP_REMINDER_ENABLED", "true").lower() == "true"
 FOLLOWUP_REMINDER_MINUTES = int(os.getenv("FOLLOWUP_REMINDER_MINUTES", "10"))
 
@@ -320,13 +322,19 @@ def send_customer_sms(to_number, is_emergency=False):
     business = BUSINESS_NAME.strip() or "Your Locksmith"
     callback = CALLBACK_NUMBER.strip()
 
-    if is_emergency:
-        body = f"Thanks for contacting {business}. We received your urgent request and will contact you shortly."
+    if DEMO_MODE:
+        body = (
+            f"This is a live demo of how {business} can automatically reply to new leads in real time."
+        )
+        if callback:
+            body += f" To set this up on your website, call {callback}."
     else:
-        body = f"Thanks for contacting {business}. We received your request and will contact you shortly."
-
-    if callback:
-        body += f" If urgent, call {callback}."
+        if is_emergency:
+            body = f"Thanks for contacting {business}. We received your urgent request and will contact you shortly."
+        else:
+            body = f"Thanks for contacting {business}. We received your request and will contact you shortly."
+        if callback:
+            body += f" If urgent, call {callback}."
 
     try:
         msg = _twilio.messages.create(
