@@ -40,6 +40,9 @@ CALLBACK_NUMBER = os.getenv("CALLBACK_NUMBER", "")
 
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() == "true"
 
+DEMO_SMS_TEMPLATE = os.getenv("DEMO_SMS_TEMPLATE", "")
+LIVE_SMS_TEMPLATE = os.getenv("LIVE_SMS_TEMPLATE", "")
+
 FOLLOWUP_REMINDER_ENABLED = os.getenv("FOLLOWUP_REMINDER_ENABLED", "true").lower() == "true"
 FOLLOWUP_REMINDER_MINUTES = int(os.getenv("FOLLOWUP_REMINDER_MINUTES", "10"))
 
@@ -323,18 +326,14 @@ def send_customer_sms(to_number, is_emergency=False):
     callback = CALLBACK_NUMBER.strip()
 
     if DEMO_MODE:
-        body = (
-            f"This is a live demo of how {business} can automatically reply to new leads in real time."
-        )
-        if callback:
-            body += f" To set this up on your website, call {callback}."
+        template = DEMO_SMS_TEMPLATE or "This is a live demo of how {business} can automatically reply to new leads."
     else:
-        if is_emergency:
-            body = f"Thanks for contacting {business}. We received your urgent request and will contact you shortly."
-        else:
-            body = f"Thanks for contacting {business}. We received your request and will contact you shortly."
-        if callback:
-            body += f" If urgent, call {callback}."
+        template = LIVE_SMS_TEMPLATE or "Thanks for contacting {business}. We received your request."
+
+    body = template.format(
+        business=business,
+        callback=callback
+    )
 
     try:
         msg = _twilio.messages.create(
