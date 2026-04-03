@@ -353,12 +353,17 @@ def send_customer_email(to_email):
 
     subject = f"Thanks for contacting {BUSINESS_NAME}"
 
-    body = (
-        f"Hi,\n\n"
-        f"We received your request and will contact you shortly.\n\n"
-        f"This is a demo of how your business can automatically capture and respond to leads in real-time.\n\n"
-        f"If you'd like to see how this system can be set up for your business, call {CALLBACK_NUMBER}.\n\n"
-        f"— {BUSINESS_NAME}"
+    business = BUSINESS_NAME.strip() or "Your Locksmith"
+    callback = CALLBACK_NUMBER.strip()
+
+    if DEMO_MODE:
+        template = os.getenv("DEMO_EMAIL_TEMPLATE") or "Demo message missing"
+    else:
+        template = os.getenv("LIVE_EMAIL_TEMPLATE") or "Live message missing"
+
+    body = template.format(
+        business=business,
+        callback=callback
     )
 
     try:
